@@ -6,7 +6,7 @@ const Navbar = () => {
 
   const navLinks = [
     { to: '/', label: 'Home', icon: '🏠' },
-    { to: '/assessment', label: '📋 Assessment', icon: '📋' },
+    { to: '/assessment', label: 'Assessment', icon: '📋' },
     { to: '/history', label: 'History', icon: '🕐' },
   ];
 

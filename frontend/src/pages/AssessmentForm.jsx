@@ -46,6 +46,16 @@ const EXPERIENCE_OPTIONS = [
   { label: "Full Time",     icon: "🏢", desc: "Full-time professional", apiValue: "Yes" },
 ];
 
+const UNIVERSITIES = [
+  "University of Gujrat",
+  "University of the Punjab",
+  "COMSATS University",
+  "FAST NUCES",
+  "UET Lahore",
+  "NUST",
+  "Other",
+];
+
 const STEPS = [
   { id: 1, title: "Basic Information", icon: "👤" },
   { id: 2, title: "Technical Skills",  icon: "💡" },
@@ -136,6 +146,7 @@ const DarkModeToggle = ({ dark, toggle }) => (
   <motion.button
     whileTap={{ scale: 0.9 }}
     onClick={toggle}
+    aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
     style={{
       position: 'fixed', top: '1rem', right: '1rem', zIndex: 1000,
       background: dark ? '#312e81' : '#eef2ff',
@@ -196,18 +207,33 @@ const SectionHeading = ({ icon, title, subtitle, dark }) => (
   </div>
 );
 
+// Small review-step summary row (icon + label + value)
+const ReviewRow = ({ icon, label, value, dark }) => (
+  <div className="af-review-row">
+    <div className="af-review-row-icon">{icon}</div>
+    <div style={{ minWidth: 0 }}>
+      <div className="af-review-row-label">{label}</div>
+      <div className="af-review-row-value" style={{ color: dark ? '#e0e7ff' : '#1e293b' }}>
+        {value || '—'}
+      </div>
+    </div>
+  </div>
+);
+
 // ================================================================
 // MAIN COMPONENT
 // ================================================================
 const AssessmentForm = () => {
   const navigate = useNavigate();
 
-  const [dark, setDark] = useState(false);
+  // Dark mode is ON by default; the toggle button still lets the user switch.
+  const [dark, setDark] = useState(true);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [maxReached, setMaxReached] = useState(1);
   const [direction, setDirection] = useState(1);
-const [university, setUniversity] = useState('');
+
+  const [university, setUniversity] = useState('');
   const [fullName, setFullName] = useState('');
   const [educationLevel, setEducationLevel] = useState('Bachelor');
 
@@ -218,6 +244,8 @@ const [university, setUniversity] = useState('');
 
   const [cgpa, setCgpa] = useState(3.5);
   const [experienceChoice, setExperienceChoice] = useState('');
+
+  const [confirmChecked, setConfirmChecked] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
@@ -265,6 +293,7 @@ const [university, setUniversity] = useState('');
   };
 
   // ---------------- validation ----------------
+  // Unchanged from the original: only these four steps are required.
   const validateStep = (step) => {
     if (step === 1) return fullName.trim().length >= 2;
     if (step === 2) return selectedSkills.length > 0;
@@ -342,6 +371,10 @@ const [university, setUniversity] = useState('');
   const textMute = dark ? '#818cf8' : '#94a3b8';
   const cardBg   = dark ? '#13112b' : '#f8fafc';
   const glassCardStyle = dark ? { background: '#13112b', border: '1px solid #312e81' } : {};
+
+  // Submit uses the same validation as before — the confirmation checkbox is a visual
+  // reassurance only and does NOT block submission, so behavior stays unchanged.
+  const canSubmit = allValid;
 
   return (
     <div className={`fade-in ${dark ? 'af-dark' : ''}`} style={{ maxWidth: '1100px', margin: '0 auto' }}>
@@ -518,7 +551,7 @@ const [university, setUniversity] = useState('');
           box-shadow: 0 2px 8px rgba(0,0,0,0.2);
           cursor: pointer;
         }
-        .af-text-input {
+        .af-text-input, .af-select {
           width: 100%;
           padding: 12px 16px;
           border-radius: 12px;
@@ -526,8 +559,9 @@ const [university, setUniversity] = useState('');
           font-size: 0.92rem;
           outline: none;
           transition: border-color 0.2s ease;
+          background: #fff;
         }
-        .af-text-input:focus {
+        .af-text-input:focus, .af-select:focus {
           border-color: #6366f1;
           box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         }
@@ -598,6 +632,111 @@ const [university, setUniversity] = useState('');
           margin: 2px;
         }
 
+        /* ============== REVIEW & SUBMIT STEP ============== */
+        .af-review-card {
+          border-radius: 16px;
+          padding: 1.3rem;
+          background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
+          margin-bottom: 1.2rem;
+        }
+        .af-review-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+          gap: 14px;
+        }
+        .af-review-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .af-review-row-icon {
+          flex-shrink: 0;
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, rgba(99,102,241,0.14), rgba(236,72,153,0.14));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.05rem;
+        }
+        .af-review-row-label {
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          margin-bottom: 2px;
+        }
+        .af-review-row-value {
+          font-size: 0.92rem;
+          font-weight: 700;
+          word-break: break-word;
+        }
+        .af-preview-card {
+          padding: 20px;
+          border-radius: 16px;
+          border: 1.5px solid #ddd6fe;
+          background: linear-gradient(135deg, rgba(99,102,241,0.07), rgba(236,72,153,0.07));
+          margin-bottom: 1.2rem;
+        }
+        .af-preview-heading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 800;
+          font-size: 0.95rem;
+          color: #4c1d95;
+          margin-bottom: 10px;
+        }
+        .af-preview-chip {
+          padding: 7px 16px;
+          border-radius: 20px;
+          background: #fff;
+          border: 1.5px solid #c4b5fd;
+          color: #6d28d9;
+          font-weight: 700;
+          font-size: 0.8rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .af-confirm-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px 18px;
+          border-radius: 14px;
+          border: 1.5px solid #e2e8f0;
+          background: #fff;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .af-confirm-card:hover {
+          border-color: #6366f1;
+        }
+        .af-confirm-card-checked {
+          border-color: #10b981;
+          background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(99,102,241,0.06));
+        }
+        .af-confirm-checkbox {
+          margin-top: 3px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+          accent-color: #6366f1;
+          cursor: pointer;
+        }
+        .af-confirm-text-title {
+          font-weight: 700;
+          font-size: 0.88rem;
+        }
+        .af-confirm-text-sub {
+          font-size: 0.76rem;
+          margin-top: 2px;
+        }
+
         /* ================= DARK MODE OVERRIDES ================= */
         .af-dark .af-step-dot { background: #1e1b4b; border-color: #312e81; color: #a5b4fc; }
         .af-dark .af-step-dot-active { background: #312e81; border-color: #6366f1; color: #c7d2fe; }
@@ -606,7 +745,8 @@ const [university, setUniversity] = useState('');
         .af-dark .af-badge { background: #1e1b4b; border-color: #312e81; color: #c7d2fe; }
         .af-dark .af-badge:hover { border-color: #6366f1; color: #a5b4fc; }
         .af-dark .af-search-input,
-        .af-dark .af-text-input { background: #1e1b4b; border-color: #312e81; color: #e0e7ff; }
+        .af-dark .af-text-input,
+        .af-dark .af-select { background: #1e1b4b; border-color: #312e81; color: #e0e7ff; }
         .af-dark .af-search-input::placeholder,
         .af-dark .af-text-input::placeholder { color: #6b7299; }
         .af-dark .af-interest-card,
@@ -620,6 +760,15 @@ const [university, setUniversity] = useState('');
         .af-dark .glass-card { background: #13112b; border: 1px solid #312e81; color: #e0e7ff; }
         .af-dark select { background: #1e1b4b; color: #e0e7ff; border-color: #312e81; }
         .af-dark label { color: #e0e7ff; }
+        .af-dark .af-review-card { background: #17143a; border-color: #312e81; }
+        .af-dark .af-review-row-icon { background: linear-gradient(135deg, rgba(99,102,241,0.28), rgba(236,72,153,0.24)); }
+        .af-dark .af-review-row-label { color: #818cf8; }
+        .af-dark .af-preview-card { background: linear-gradient(135deg, rgba(139,92,246,0.16), rgba(236,72,153,0.16)); border-color: #4c1d95; }
+        .af-dark .af-preview-heading { color: #c4b5fd; }
+        .af-dark .af-preview-chip { background: #1e1b4b; border-color: #6d28d9; color: #c4b5fd; }
+        .af-dark .af-confirm-card { background: #13112b; border-color: #312e81; }
+        .af-dark .af-confirm-card-checked { border-color: #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(99,102,241,0.12)); }
+        .af-dark .af-confirm-text-sub { color: #a5b4fc; }
       `}</style>
 
       {/* ── HEADER ─────────────────────────────────── */}
@@ -665,10 +814,12 @@ const [university, setUniversity] = useState('');
                     />
                     {errors[1] && <div className="af-error-text">Please enter your full name to continue.</div>}
                   </div>
-                  <div className="form-group">
+
+                  <div className="form-group" style={{ marginBottom: '1.2rem' }}>
                     <label htmlFor="af-education" style={{ color: textPri }}>Education Level</label>
                     <select
                       id="af-education"
+                      className="af-select"
                       value={educationLevel}
                       onChange={(e) => setEducationLevel(e.target.value)}
                     >
@@ -678,47 +829,24 @@ const [university, setUniversity] = useState('');
                       <option value="PhD">PhD</option>
                     </select>
                   </div>
+
+                  <div className="form-group">
+                    <label htmlFor="af-university" style={{ color: textPri }}>University</label>
+                    <select
+                      id="af-university"
+                      className="af-select"
+                      value={university}
+                      onChange={(e) => setUniversity(e.target.value)}
+                    >
+                      <option value="">Select University</option>
+                      {UNIVERSITIES.map(u => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               )}
-              
-<div className="form-group" style={{ marginTop: "1rem" }}>
-  <label>University</label>
 
-  <select
-    value={university}
-    onChange={(e) => setUniversity(e.target.value)}
-  >
-    <option value="">Select University</option>
-
-    <option value="University of Gujrat">
-      University of Gujrat
-    </option>
-
-    <option value="University of the Punjab">
-      University of the Punjab
-    </option>
-
-    <option value="COMSATS University">
-      COMSATS University
-    </option>
-
-    <option value="FAST NUCES">
-      FAST NUCES
-    </option>
-
-    <option value="UET Lahore">
-      UET Lahore
-    </option>
-
-    <option value="NUST">
-      NUST
-    </option>
-
-    <option value="Other">
-      Other
-    </option>
-  </select>
-</div>
               {/* STEP 2 — TECHNICAL SKILLS */}
               {currentStep === 2 && (
                 <div>
@@ -861,59 +989,64 @@ const [university, setUniversity] = useState('');
                 <div>
                   <SectionHeading icon="🚀" title="Review & Submit" subtitle="Double check your profile before we run the AI models." dark={dark} />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '1.4rem' }}>
-                    <div style={{ padding: '14px', background: cardBg, borderRadius: '12px' }}>
-                      <div style={{ fontSize: '0.72rem', color: textSec, fontWeight: 700 }}>NAME</div>
-                      <div style={{ fontWeight: 700, color: textPri }}>{fullName || '—'}</div>
+                  {/* Profile summary card */}
+                  <div className="af-review-card">
+                    <div className="af-review-grid">
+                      <ReviewRow icon="🧑" label="Full Name" value={fullName} dark={dark} />
+                      <ReviewRow icon="🏫" label="University" value={university} dark={dark} />
+                      <ReviewRow icon="🎓" label="Education Level" value={educationLevel} dark={dark} />
+                      <ReviewRow icon="🎯" label="Field of Interest" value={selectedInterest} dark={dark} />
+                      <ReviewRow icon="📈" label="CGPA" value={`${cgpa.toFixed(2)} / 4.0 · ${cgpaMeta.text}`} dark={dark} />
+                      <ReviewRow icon="💼" label="Work Experience" value={experienceChoice} dark={dark} />
                     </div>
-                    <div style={{ padding: '14px', background: cardBg, borderRadius: '12px' }}>
-                      <div style={{ fontSize: '0.72rem', color: textSec, fontWeight: 700 }}>INTEREST</div>
-                      <div style={{ fontWeight: 700, color: textPri }}>{selectedInterest || '—'}</div>
-                    </div>
-                    <div style={{ padding: '14px', background: cardBg, borderRadius: '12px' }}>
-                      <div style={{ fontSize: '0.72rem', color: textSec, fontWeight: 700 }}>CGPA</div>
-                      <div style={{ fontWeight: 700, color: textPri }}>{cgpa.toFixed(2)} / 4.0</div>
-                    </div>
-                    <div style={{ padding: '14px', background: cardBg, borderRadius: '12px' }}>
-                      <div style={{ fontSize: '0.72rem', color: textSec, fontWeight: 700 }}>EXPERIENCE</div>
-                      <div style={{ fontWeight: 700, color: textPri }}>{experienceChoice || '—'}</div>
+
+                    <div style={{ marginTop: '18px' }}>
+                      <div className="af-review-row-label" style={{ marginBottom: '8px' }}>Skills ({selectedSkills.length})</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {selectedSkills.length > 0
+                          ? selectedSkills.map(s => <span key={s} className="af-summary-chip">{s}</span>)
+                          : <span style={{ fontSize: '0.82rem', color: textMute }}>No skills selected</span>}
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '1.4rem' }}>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: textSec, marginBottom: '8px' }}>SKILLS</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {selectedSkills.map(s => <span key={s} className="af-summary-chip">{s}</span>)}
-                    </div>
-                  </div>
-
-                  <div style={{
-                    padding: '16px', borderRadius: '14px',
-                    border: dark ? '1.5px solid #4c1d95' : '1.5px solid #ddd6fe',
-                    background: dark ? 'linear-gradient(135deg, rgba(139,92,246,0.14), rgba(236,72,153,0.14))' : 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(236,72,153,0.06))',
-                    marginBottom: '1rem'
-                  }}>
-                    <div style={{ fontWeight: 700, color: dark ? '#c4b5fd' : '#4c1d95', marginBottom: '6px', fontSize: '0.85rem' }}>✨ Likely Career Matches (Preview)</div>
+                  {/* AI career preview */}
+                  <div className="af-preview-card">
+                    <div className="af-preview-heading">✨ Likely Career Matches (Preview)</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {estimated.map(c => (
-                        <span key={c} style={{
-                          padding: '6px 14px', borderRadius: '20px',
-                          background: dark ? '#1e1b4b' : '#fff',
-                          border: dark ? '1.5px solid #6d28d9' : '1.5px solid #c4b5fd',
-                          color: dark ? '#c4b5fd' : '#6d28d9',
-                          fontWeight: 700, fontSize: '0.78rem'
-                        }}>
-                          {c}
-                        </span>
+                        <span key={c} className="af-preview-chip">🎯 {c}</span>
                       ))}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: dark ? '#a78bfa' : '#7c3aed', marginTop: '8px' }}>
-                      Final AI prediction may differ once all models run.
+                    <div style={{ fontSize: '0.72rem', color: dark ? '#a78bfa' : '#7c3aed', marginTop: '10px' }}>
+                      This is a quick preview based on your inputs — the final AI prediction may refine it once all models run.
                     </div>
                   </div>
 
+                  {/* Confirmation card */}
+                  <label
+                    className={`af-confirm-card ${confirmChecked ? 'af-confirm-card-checked' : ''}`}
+                    htmlFor="af-confirm-checkbox"
+                  >
+                    <input
+                      id="af-confirm-checkbox"
+                      type="checkbox"
+                      className="af-confirm-checkbox"
+                      checked={confirmChecked}
+                      onChange={(e) => setConfirmChecked(e.target.checked)}
+                    />
+                    <div>
+                      <div className="af-confirm-text-title" style={{ color: textPri }}>
+                        {confirmChecked ? '✅' : '📝'} I confirm the information above is accurate
+                      </div>
+                      <div className="af-confirm-text-sub" style={{ color: textSec }}>
+                        Your profile will be sent to our AI models to generate your personalized career recommendations.
+                      </div>
+                    </div>
+                  </label>
+
                   {!allValid && (
-                    <div className="af-error-text">Please complete all previous steps before submitting.</div>
+                    <div className="af-error-text" style={{ marginTop: '10px' }}>Please complete all previous steps before submitting.</div>
                   )}
                 </div>
               )}
@@ -946,8 +1079,8 @@ const [university, setUniversity] = useState('');
                 type="button"
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={!allValid || loading}
-                style={{ opacity: !allValid || loading ? 0.6 : 1, padding: '0.9rem 1.8rem' }}
+                disabled={!canSubmit || loading}
+                style={{ opacity: !canSubmit || loading ? 0.6 : 1, padding: '0.9rem 1.8rem' }}
               >
                 {loading ? '🔄 Analyzing Profile...' : '🚀 Get My Top 3 Career Matches'}
               </button>
